@@ -8,7 +8,7 @@ This repo contains the source code for a simple telegram bot. The bot can:
 
 This version can currently sends message only to one chat at a time (this may change in future version).
 
-# How to use
+# How to use
 
 1. create a .env file and add your TELEGRAM_BOT_TOKEN and CHAT_ID
 2. install the dependencies in requirements.txt
