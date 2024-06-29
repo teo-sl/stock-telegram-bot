@@ -1,6 +1,7 @@
 import yfinance as yf
 import threading
 import datetime
+import requests
 
 
 class StockSettings():
@@ -79,3 +80,18 @@ def get_stock_percentage_changes(ticker,time_deltas=[5,30,182,365],names=["five 
         return ret
     except Exception as e:
         return {'error': str(e)}
+    
+    
+def get_ticker(company_name,market_ref=None):
+    yfinance = "https://query2.finance.yahoo.com/v1/finance/search"
+    user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
+    params = {"q": company_name, "quotes_count": 1, "country": "United States"}
+
+    res = requests.get(url=yfinance, params=params, headers={'User-Agent': user_agent})
+    data = res.json()
+    codes = [x['symbol'] for x in data['quotes']]
+    if codes == []:
+        return codes
+    if market_ref is not None:
+        codes = [codes[0]]+[x for x in codes[1:] if x.endswith(market_ref)]
+    return codes
