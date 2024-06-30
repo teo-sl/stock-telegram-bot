@@ -14,7 +14,10 @@ class BotFunctionality:
         infos = None
         is_first = old_price is None
         try:
-            infos = get_stock_data(stock_name)
+            if self.stock_settings[stock_name].stock_type==StockTypes.STOCK:
+                infos = get_stock_data(stock_name)
+            else:
+                infos = get_crypto_data(stock_name+"USDT")
             cur_price = infos['current_price']
             text_to_send = f"{stock_name}\n"
             
@@ -25,8 +28,9 @@ class BotFunctionality:
 
             if abs(old_price - cur_price) >= 0.1 or is_first:
                 trend = "falling" if old_price > cur_price else "rising"
-                text_to_send += f"Price is {trend} of {round(abs(old_price - cur_price), 2)}\nCurrent price {cur_price}\n"
-                text_to_send += f"Change from today {round((cur_price - prev_close) / float(prev_close) * 100, 3)} %"
+                difference_price = round(abs(old_price - cur_price), 2)
+                text_to_send += f"Price is {trend} of {difference_price} ||| {'+' if difference_price>=0 else '-'} {round((difference_price/old_price)*100,2)} % \nCurrent price {cur_price}\n"
+                text_to_send += f"Change from today {'+' if cur_price - prev_close>=0 else '-'}{round((cur_price - prev_close) / float(prev_close) * 100, 3)} %"
                 self.bot.send_message(self.chat_id, text_to_send)  
             return cur_price
         
@@ -54,6 +58,7 @@ class BotFunctionality:
         interval_minutes = 5
         try:
             splitted_msg = message.text.split(' ')
+            command = splitted_msg[0].strip()
             stock_name = splitted_msg[1].strip()
             if len(splitted_msg) > 2:
                 interval_minutes = int(splitted_msg[2])
@@ -62,7 +67,13 @@ class BotFunctionality:
             return
         
         if stock_name not in self.stock_settings:
-            self.stock_settings[stock_name] = StockSettings(stock_name, interval_minutes, is_monitoring=False)
+            self.stock_settings[stock_name] = StockSettings(stock_name, interval_minutes, is_monitoring=False)   
+        else:
+            self.stock_settings[stock_name].interval_minutes = interval_minutes
+            
+        if command=="/mcrypto":
+                self.stock_settings[stock_name].stock_type=StockTypes.CRYPTO
+            
         
         stock_info = self.stock_settings[stock_name]
         
@@ -144,7 +155,7 @@ class BotFunctionality:
 
     def run(self):
         # Add message handlers
-        self.bot.message_handler(commands=['monitor', 'monitoring'])(self.start_monitor)
+        self.bot.message_handler(commands=['monitor', 'monitoring','mcrypto'])(self.start_monitor)
         self.bot.message_handler(commands=['stopall'])(self.stop_all)
         self.bot.message_handler(commands=['stop'])(self.stop_monitor)
         self.bot.message_handler(commands=['summary', 'sum'])(self.get_stock_summary)

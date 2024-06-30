@@ -2,14 +2,20 @@ import yfinance as yf
 import threading
 import datetime
 import requests
+from enum import Enum
+from datetime import datetime, timedelta
 
+class StockTypes(Enum):
+    STOCK = 1
+    CRYPTO = 2
 
 class StockSettings():
-    def __init__(self,stock_name,interval_minutes=5,is_monitoring=False):
+    def __init__(self,stock_name,interval_minutes=5,is_monitoring=False, stock_type : StockTypes = StockTypes.STOCK):
         self.stock_name = stock_name
         self.interval_minutes = interval_minutes
         self.is_monitoring = is_monitoring
         self.lock = threading.Lock()
+        self.stock_type = stock_type
         
     def __str__(self):
         return f"{self.stock_name} - {self.interval_minutes} - {self.is_monitoring}"
@@ -95,3 +101,32 @@ def get_ticker(company_name,market_ref=None):
     if market_ref is not None:
         codes = [codes[0]]+[x for x in codes[1:] if x.endswith(market_ref)]
     return codes
+
+def get_current_crypto(crypto_id):
+    url = f"https://api.binance.com/api/v3/ticker/price?symbol={crypto_id}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        return float(response.json()['price'])
+    else:
+        return None
+    
+def get_historical_crypto(crypto_id, date):
+    url = f"https://api.binance.com/api/v3/klines?symbol={crypto_id}&interval=1d&startTime={date}&limit=1"
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        return float(data[0][1]) 
+    else:
+        return None
+    
+def get_crypto_data(stock_name):
+    current_price = get_current_crypto(stock_name)
+    today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    start_of_day_unix = int(today.timestamp() * 1000)
+    yesterday_price = get_historical_crypto(stock_name,start_of_day_unix)
+    
+    infos = {
+        "current_price" : current_price,
+        "previous_close" : yesterday_price,
+    }
+    return infos
