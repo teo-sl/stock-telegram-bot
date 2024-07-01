@@ -3,8 +3,14 @@ import threading
 import datetime
 import requests
 from enum import Enum
-from datetime import datetime, timedelta
+from datetime import datetime
+import re
 
+
+class InputPayloads(Enum):
+    MONITOR = 1
+    STOCK_NAME = 2
+    COMPANY = 3
 class StockTypes(Enum):
     STOCK = 1
     CRYPTO = 2
@@ -20,6 +26,39 @@ class StockSettings():
     def __str__(self):
         return f"{self.stock_name} - {self.interval_minutes} - {self.is_monitoring}"
 
+def parse_message(message : str, payload_type : InputPayloads):
+    splt_msg = [x.strip() for x in message.text.split(' ')]
+    if payload_type == InputPayloads.MONITOR:
+        payload = {
+            "command" : "",
+            "stock_name" : "",
+            "interval_minutes" : 5
+        }
+        assert len(splt_msg)>=2
+        payload['command']=splt_msg[0]
+        payload['stock_name']=splt_msg[1]
+        if len(splt_msg)>=3:
+            payload['interval_minutes']=int(splt_msg[2])
+    elif payload_type==InputPayloads.STOCK_NAME:
+        payload = {
+            "stock_name" : "",
+        }
+        assert len(splt_msg)>=2
+        payload['stock_name']=splt_msg[1]
+    elif payload_type==InputPayloads.COMPANY:
+        payload = {
+            "company_name" : "",
+            "maket" : None
+        }
+        assert len(splt_msg)>=2
+        payload['company_name']=splt_msg[1]
+        if len(splt_msg)>=3:
+            market = splt_msg[2]
+            pattern = r'^\.\w+$'
+            assert re.match(pattern, market) != None
+            payload['market']=market
+    return payload
+        
 def get_stock_data(ticker):
     """
     Retrieves real-time stock data for a given European ticker symbol.
