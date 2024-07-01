@@ -28,7 +28,7 @@ class BotFunctionality:
             if abs(old_price - cur_price) >= 0.1 or is_first:
                 trend = "falling" if old_price > cur_price else "rising"
                 difference_price = round(abs(old_price - cur_price), 2)
-                sign = 1 if old_price - cur_price >= 0 else -1
+                sign = -1 if old_price - cur_price >= 0 else 1
                 text_to_send += f"Price is {trend} of {difference_price} ||| {'+' if sign>=0 else ''} {round((difference_price/old_price)*100,2)} % \nCurrent price {cur_price}\n"
                 text_to_send += f"Change from today {'+' if cur_price - prev_close>=0 else ''}{round((cur_price - prev_close) / float(prev_close) * 100, 3)} %"
                 self.bot.send_message(self.chat_id, text_to_send)  
