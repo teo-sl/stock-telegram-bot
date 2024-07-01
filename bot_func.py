@@ -156,4 +156,4 @@ class BotFunctionality:
         self.bot.message_handler(commands=['search', 's'])(self.get_stock_code)
 
         # Start the bot
-        self.bot.polling()
+        self.bot.infinity_polling(timeout=10, long_polling_timeout = 5)
