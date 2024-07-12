@@ -3,7 +3,7 @@ import threading
 import datetime
 import requests
 from enum import Enum
-from datetime import datetime
+import datetime
 import re
 
 
@@ -160,7 +160,7 @@ def get_historical_crypto(crypto_id, date):
     
 def get_crypto_data(stock_name):
     current_price = get_current_crypto(stock_name)
-    today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    today = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
     start_of_day_unix = int(today.timestamp() * 1000)
     yesterday_price = get_historical_crypto(stock_name,start_of_day_unix)
     
